@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Box, Typography, Grid, Collapse, Skeleton } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CodeIcon from "@mui/icons-material/Code";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Layout from "./Layout";
 import api from "../api/axios";
 
@@ -24,6 +26,12 @@ function DiffBadge({ diff }) {
 
 function ProblemCard({ problem }) {
     const [expanded, setExpanded] = useState(false);
+    const navigate = useNavigate();
+
+    const handlePractice = (e) => {
+        e.stopPropagation(); // don't toggle expand
+        navigate("/practice", { state: { problem } });
+    };
 
     return (
         <Box
@@ -38,8 +46,7 @@ function ProblemCard({ problem }) {
                 "&:hover": { borderColor: "#3a3a3a" },
                 position: "relative",
                 "&::before": {
-                    content: '""',
-                    position: "absolute", inset: 0,
+                    content: '""', position: "absolute", inset: 0,
                     background: "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%)",
                     pointerEvents: "none",
                 },
@@ -47,19 +54,39 @@ function ProblemCard({ problem }) {
         >
             {/* Header row */}
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: "14px 16px" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
                     <Box sx={{ width: 30, height: 30, borderRadius: "8px", background: "#1e1e1e", border: "0.5px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         <CodeIcon sx={{ fontSize: 14, color: "#555" }} />
                     </Box>
-                    <Box>
-                        <Typography sx={{ fontSize: "13px", fontWeight: 500, color: "#d8d8d8", fontFamily: "'Inter', sans-serif", letterSpacing: "-0.01em", mb: "4px" }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: "13px", fontWeight: 500, color: "#d8d8d8", fontFamily: "'Inter', sans-serif", letterSpacing: "-0.01em", mb: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {problem.title}
                         </Typography>
                         <DiffBadge diff={problem.difficulty} />
                     </Box>
                 </Box>
-                <Box sx={{ color: "#333", display: "flex", flexShrink: 0 }}>
-                    {expanded ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
+
+                {/* Right side: practice button + chevron */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, ml: "12px" }}>
+                    <Box
+                        component="button"
+                        onClick={handlePractice}
+                        sx={{
+                            display: "flex", alignItems: "center", gap: "5px",
+                            background: "#1e1e1e", border: "0.5px solid #2e2e2e",
+                            color: "#888", px: "12px", py: "5px", borderRadius: "7px",
+                            fontSize: "11px", fontWeight: 500, cursor: "pointer",
+                            fontFamily: "'Inter', sans-serif",
+                            transition: "all 0.15s",
+                            "&:hover": { background: "#e8e8e8", color: "#111", borderColor: "transparent" },
+                        }}
+                    >
+                        <PlayArrowIcon sx={{ fontSize: 13 }} />
+                        Practice
+                    </Box>
+                    <Box sx={{ color: "#333", display: "flex" }}>
+                        {expanded ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
+                    </Box>
                 </Box>
             </Box>
 
@@ -83,6 +110,25 @@ function ProblemCard({ problem }) {
                             </Box>
                         </>
                     )}
+
+                    {/* Practice CTA inside expanded view too */}
+                    <Box
+                        component="button"
+                        onClick={handlePractice}
+                        sx={{
+                            mt: "18px",
+                            display: "flex", alignItems: "center", gap: "6px",
+                            background: "#e8e8e8", border: "none",
+                            color: "#111", px: "16px", py: "8px", borderRadius: "8px",
+                            fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                            fontFamily: "'Inter', sans-serif",
+                            transition: "background 0.15s",
+                            "&:hover": { background: "#d4d4d4" },
+                        }}
+                    >
+                        <PlayArrowIcon sx={{ fontSize: 15 }} />
+                        Open Practice Room
+                    </Box>
                 </Box>
             </Collapse>
         </Box>
@@ -97,6 +143,7 @@ function SkeletonCard() {
                 <Skeleton width="38%" height={16} sx={{ bgcolor: "#222", mb: "6px" }} />
                 <Skeleton width="12%" height={14} sx={{ bgcolor: "#1e1e1e" }} />
             </Box>
+            <Skeleton width={80} height={30} sx={{ bgcolor: "#1e1e1e", borderRadius: "7px" }} />
         </Box>
     );
 }
@@ -125,7 +172,7 @@ export default function Problems() {
     };
 
     const statCards = [
-        { label: "Total",  count: counts.ALL,    color: "#888"   },
+        { label: "Total",  count: counts.ALL,    color: "#888"    },
         { label: "Easy",   count: counts.EASY,   color: "#4ade80" },
         { label: "Medium", count: counts.MEDIUM, color: "#f59e0b" },
         { label: "Hard",   count: counts.HARD,   color: "#f87171" },
@@ -150,7 +197,7 @@ export default function Problems() {
                         Problem Set
                     </Typography>
                     <Typography sx={{ fontSize: "14px", color: "#444", fontFamily: "'Inter', sans-serif" }}>
-                        {problems.length} problems available
+                        {problems.length} problems available — click any to expand, then practice
                     </Typography>
                 </Box>
 
@@ -187,26 +234,7 @@ export default function Problems() {
                             const active = difficulty === d;
                             const c = DIFFICULTY_COLOR[d];
                             return (
-                                <Box
-                                    key={d}
-                                    component="button"
-                                    onClick={() => setDifficulty(d)}
-                                    sx={{
-                                        background: active ? (c ? c.bg : "#1e1e1e") : "transparent",
-                                        border: active ? `0.5px solid ${c ? c.border : "#2a2a2a"}` : "0.5px solid transparent",
-                                        borderRadius: "6px",
-                                        color: active ? (c ? c.text : "#aaa") : "#333",
-                                        fontSize: "11px",
-                                        fontWeight: 500,
-                                        fontFamily: "'Inter', sans-serif",
-                                        cursor: "pointer",
-                                        px: "12px",
-                                        py: "5px",
-                                        transition: "all 0.15s",
-                                        letterSpacing: "0.04em",
-                                        "&:hover": { color: c ? c.text : "#888" },
-                                    }}
-                                >
+                                <Box key={d} component="button" onClick={() => setDifficulty(d)} sx={{ background: active ? (c ? c.bg : "#1e1e1e") : "transparent", border: active ? `0.5px solid ${c ? c.border : "#2a2a2a"}` : "0.5px solid transparent", borderRadius: "6px", color: active ? (c ? c.text : "#aaa") : "#333", fontSize: "11px", fontWeight: 500, fontFamily: "'Inter', sans-serif", cursor: "pointer", px: "12px", py: "5px", transition: "all 0.15s", letterSpacing: "0.04em", "&:hover": { color: c ? c.text : "#888" } }}>
                                     {d}
                                 </Box>
                             );
@@ -226,7 +254,6 @@ export default function Problems() {
                         filtered.map((p) => <ProblemCard key={p.id} problem={p} />)
                     )}
                 </Box>
-
             </Box>
         </Layout>
     );

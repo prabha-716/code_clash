@@ -10,6 +10,7 @@ import Battle from "./pages/Battle";
 import Problems from "./pages/Problems";
 import Profile from "./pages/Profile";
 import Compiler from "./pages/Compiler";
+import Practice from "./pages/Practice";
 import { WebSocketProvider } from "./context/WebSocketContext";
 
 const darkTheme = createTheme({
@@ -49,6 +50,9 @@ export default function App() {
               }/>
               <Route path="/profile" element={
                 <ProtectedRoute><Profile /></ProtectedRoute>
+              }/>
+              <Route path="/practice" element={
+                <ProtectedRoute><Practice /></ProtectedRoute>
               }/>
               <Route path="/compiler" element={
                 <ProtectedRoute><Compiler /></ProtectedRoute>

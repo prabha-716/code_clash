@@ -25,6 +25,10 @@ public interface BattleRepository extends JpaRepository<Battle, Long> {
     List<Object[]> findHeatmapByUserId(@Param("userId") Long userId);
 
 
+
+    List<Battle> findByPlayer1OrPlayer2OrderByStartedAtDesc(User player1, User player2);
+
+
     @Query("SELECT b FROM Battle b WHERE (b.player1 = :user OR b.player2 = :user) AND b.status = 'FINISHED' ORDER BY b.startedAt DESC")
     List<Battle> findFinishedBattlesByUser(@Param("user") User user);
 }

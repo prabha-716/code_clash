@@ -3,9 +3,9 @@
 *.iml
 
 # Node (frontend)
-node_modules/
-dist/
-build/
+code-clash-frontend/node_modules/
+code-clash-frontend/dist/
+code_clash-backend/target/
 
 # Java (backend)
 target/

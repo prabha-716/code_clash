@@ -126,7 +126,9 @@ public class WebSocketController {
         problemData.put("examples", problem.getExamples() != null
                 ? new java.util.ArrayList<>(problem.getExamples())
                 : new java.util.ArrayList<>()
+
         );
+        problemData.put("testCases", problem.getTestCases());
 
         messagingTemplate.convertAndSendToUser(
                 challenger.getId().toString(), "/queue/battle",
