@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 20px; }
+        h2 { color: #569cd6; }
+        input { width: 600px; padding: 8px; background: #2d2d2d; color: #d4d4d4; border: 1px solid #555; }
+        button { padding: 8px 16px; margin: 4px; background: #0e639c; color: white; border: none; cursor: pointer; }
+        button:hover { background: #1177bb; }
+        #log { background: #0d0d0d; color: #0f0; padding: 12px; height: 350px; overflow-y: auto; margin-top: 12px; border: 1px solid #333; }
+        .error { color: #f44; }
+        .success { color: #4f4; }
+        .received { color: #4af; }
+        .sent { color: #fa4; }
+    </style>
+</head>
+<body>
+
+<h2>🔌 WebSocket Tester — Code Clash</h2>
+
+<label>JWT Token:</label><br>
+<input id="token" placeholder="Paste your JWT token here"/><br><br>
+
+<button onclick="connect()">✅ Connect</button>
+<button onclick="disconnect()">❌ Disconnect</button>
+<button onclick="sendMsg()">📤 Send Message</button>
+<button onclick="clearLog()">🗑 Clear</button>
+
+<div id="log"></div>
+
+<script>
+    let stompClient = null;
+
+    function log(msg, cls) {
+        const div = document.getElementById('log');
+        div.innerHTML += `<span class="${cls}">${new Date().toLocaleTimeString()} — ${msg}</span><br>`;
+        div.scrollTop = div.scrollHeight;
+    }
+
+    function connect() {
+        const token = document.getElementById('token').value.trim();
+
+        if (!token) {
+            log('❌ Please paste your JWT token first!', 'error');
+            return;
+        }
+
+        // connects to ws://localhost:8080/ws?token=...
+        const socket = new WebSocket(`ws://localhost:8080/ws?token=${token}`);
+        stompClient = Stomp.over(socket);
+
+        // disable stomp console logs
+        stompClient.debug = null;
+
+        stompClient.connect({}, function(frame) {
+            log('✅ Connected to WebSocket!', 'success');
+
+            // subscribe to /topic/battle
+            stompClient.subscribe('/topic/battle', function(message) {
+                log('📨 Received: ' + message.body, 'received');
+            });
+
+            log('📡 Subscribed to /topic/battle', 'success');
+
+        }, function(error) {
+            log('❌ Connection error: ' + error, 'error');
+        });
+    }
+
+    function disconnect() {
+        if (stompClient) {
+            stompClient.disconnect();
+            log('🔌 Disconnected', 'error');
+            stompClient = null;
+        } else {
+            log('❌ Not connected', 'error');
+        }
+    }
+
+    function sendMsg() {
+        if (!stompClient || !stompClient.connected) {
+            log('❌ Not connected! Click Connect first.', 'error');
+            return;
+        }
+
+        // sends to /app/battle.send — matches your @MessageMapping("/battle.send")
+        stompClient.send('/app/battle.send', {}, 'Hello from browser!');
+        log('📤 Sent message to /app/battle.send', 'sent');
+    }
+
+    function clearLog() {
+        document.getElementById('log').innerHTML = '';
+    }
+</script>
+
+</body>
+</html>
